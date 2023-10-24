@@ -29,6 +29,12 @@ Before you execute this template make sure following dependencies are met.
 $ git clone https://github.com/MediaIQ/terraform-aws-eks-cluster.git
 $ cd terraform-aws-eks-cluster
 ```
+# If you use kodekloud playgroud use the next one
+```
+$ git clone https://github.com/thelman/terraform-aws-eks-cluster.git
+$ cd terraform-aws-eks-cluster
+```
+
 
 #### Initialize Terraform
 ```
@@ -39,6 +45,10 @@ $ terraform init
 The terraform plan command is used to create an execution plan. Always a good practice to run it before you apply it to see what all resources will be created.
 
 This will ask you to specify `cluster name` and worker node instance type. 
+
+### IMPORTANT: I modify several file from the original and define default values for all vars, if you need change please see the file variables.tf
+
+### Note: In the case you use the kodekloud playground, don't have permission for auto scaling, and for default with the changes the configuration create three workers using ec2 instance  
 
 ```
 $ terraform plan
@@ -99,6 +109,10 @@ $ kubectl apply -f aws-auth.yaml
 $ kubectl get no -w
 ```
 **Note:-** You should be seeing nodes joining the cluster within less than minutes.
+
+
+### IMPORTANT: I changed the ext of eks-worker-node-upgrade-v2.tf to txt, because with the kodekloud permission is not usefull 
+
 
 ---
 #### EKS cluster upgrade using new asg file in terraform
