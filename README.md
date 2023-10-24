@@ -48,7 +48,7 @@ This will ask you to specify `cluster name` and worker node instance type.
 
 ### IMPORTANT: I modify several file from the original and define default values for all vars, if you need change please see the file variables.tf
 
-### Note: In the case you use the kodekloud playground, don't have permission for auto scaling, and for default with the changes the configuration create three workers using ec2 instance  
+### Note: In the case you use the kodekloud playground, don't have permission for auto scaling, and with the changes for default  the configuration create three workers using ec2 instance  
 
 ```
 $ terraform plan
