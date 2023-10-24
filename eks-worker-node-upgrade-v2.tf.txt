@@ -43,7 +43,7 @@ resource "aws_autoscaling_group" "eks-private-asg-v2" {
   max_size             = 2
   min_size             = 1
   name                 = "eks-private"
-  vpc_zone_identifier  = ["${aws_subnet.eks-private.*.id}"]
+  vpc_zone_identifier  = data.aws_subnets.subs_priv.ids
 
   tag {
     key                 = "Name"

@@ -10,12 +10,11 @@ resource "aws_vpc" "eks" {
   cidr_block = "10.15.0.0/19"
   enable_dns_hostnames = true
 
-  tags = "${
-    map(
-     "Name", "eks-vpc",
-     "kubernetes.io/cluster/${var.cluster-name}", "shared",
-    )
-  }"
+  tags = {
+     "Name" = "eks-vpc"
+     "kubernetes.io/cluster/${var.cluster-name}" = "shared"
+    
+  }
 }
 
 ## EKS public subnets
@@ -26,12 +25,11 @@ resource "aws_subnet" "eks-public" {
   cidr_block        = "${var.public_subnets[count.index]}"
   vpc_id            = "${aws_vpc.eks.id}"
 
-  tags = "${
-    map(
-     "Name", "eks-public-subnet",
-     "kubernetes.io/cluster/${var.cluster-name}", "shared",
-    )
-  }"
+  tags = {
+     "Name" = "eks-public-subnet",
+     "kubernetes.io/cluster/${var.cluster-name}" = "shared",
+    
+  }
 }
 
 
@@ -39,13 +37,13 @@ resource "aws_subnet" "eks-public" {
 resource "aws_internet_gateway" "eks-igw" {
   vpc_id = "${aws_vpc.eks.id}"
 
-  tags {
+  tags = {
     Name = "eks-internet-gateway"
   }
 }
 
 resource "aws_route_table" "eks-public" {
-  vpc_id = "${aws_vpc.eks.id}"
+  vpc_id = aws_vpc.eks.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -72,13 +70,13 @@ resource "aws_subnet" "eks-private" {
   cidr_block        = "${var.private_subnets[count.index]}"
   vpc_id            = "${aws_vpc.eks.id}"
 
-  tags = "${
-    map(
-     "Name", "eks-private-subnet",
-     "kubernetes.io/cluster/${var.cluster-name}", "shared",
-     "kubernetes.io/role/internal-elb", "1", 
-    )
-  }"
+  tags = {
+  
+     "Name" = "eks-private-subnet",
+     "kubernetes.io/cluster/${var.cluster-name}" = "shared",
+     "kubernetes.io/role/internal-elb" = "1", 
+    
+  }
 }
 
 resource "aws_eip" "nat" {
@@ -90,9 +88,9 @@ resource "aws_nat_gateway" "nat_gw" {
   
   allocation_id = "${aws_eip.nat.id}"
   subnet_id     = "${aws_subnet.eks-public.*.id[count.index]}"  #public subnet 
-  depends_on = ["aws_internet_gateway.eks-igw"]
+  depends_on = [aws_internet_gateway.eks-igw]
 
-  tags {
+  tags = {
     Name = "gw NAT"
   }
 }
@@ -101,8 +99,8 @@ resource "aws_nat_gateway" "nat_gw" {
 resource "aws_route_table" "eks-private" {
   vpc_id = "${aws_vpc.eks.id}"
 
-  tags {
-        Name = "route table for private subnets"
+  tags = {
+      Name = "route table for private subnets"
     }
 }
 

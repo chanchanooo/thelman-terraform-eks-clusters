@@ -19,12 +19,10 @@ resource "aws_security_group" "eks-node" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = "${
-    map(
-     "Name", "eks-worker-node-sg",
-     "kubernetes.io/cluster/${var.cluster-name}", "owned"
-    )
-  }"
+  tags = {
+     "Name" = "eks-worker-node-sg",
+     "kubernetes.io/cluster/${var.cluster-name}" = "owned"
+  }
 }
 
 resource "aws_security_group_rule" "eks-node-ingress-self" {
@@ -69,45 +67,78 @@ sudo /etc/eks/bootstrap.sh --apiserver-endpoint '${aws_eks_cluster.eks-cluster.e
 USERDATA
 }
 
-resource "aws_launch_configuration" "eks-private-lc" {
-  iam_instance_profile        = "${aws_iam_instance_profile.eks-node.name}"
-  image_id                    = "${var.eks-worker-ami}" ## visit https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
-  instance_type               = "${var.worker-node-instance_type}" # use instance variable
+
+resource "aws_instance" "vm_web" {
+  ami           = "ami-0e832ed7606840c66"
+  instance_type = "t2.micro"
+   count = "${length(var.public_subnets)}"
+#  subnet_id =  data.aws_subnets.subs_eks.ids[0]
+#  subnet_id =  "subnet-062d5a9842414e733" 
+  subnet_id = aws_subnet.eks-private[count.index].id
+    
+  iam_instance_profile        =  "${aws_iam_instance_profile.eks-node.name}"
   key_name                    = "${var.ssh_key_pair}"
-  name_prefix                 = "eks-private"
-  security_groups             = ["${aws_security_group.eks-node.id}"]
   user_data_base64            = "${base64encode(local.eks-node-private-userdata)}"
-  
-  root_block_device {
-    delete_on_termination = true
-    volume_size = 30
-    volume_type = "gp2"
-  }
+  vpc_security_group_ids      = [aws_security_group.eks-node.id]
+#  tags = {
+#    key                 = "Name"
+#    value               = "eks-worker-private-node"
+#    propagate_at_launch = true
+#  }
 
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_autoscaling_group" "eks-private-asg" {
-  desired_capacity     = 1
-  launch_configuration = "${aws_launch_configuration.eks-private-lc.id}"
-  max_size             = 2
-  min_size             = 1
-  name                 = "eks-private"
-  vpc_zone_identifier  = ["${aws_subnet.eks-private.*.id}"]
-
-  tag {
-    key                 = "Name"
-    value               = "eks-worker-private-node"
-    propagate_at_launch = true
-  }
-
-  tag {
+  tags = {
     key                 = "kubernetes.io/cluster/${var.cluster-name}"
     value               = "owned"
     propagate_at_launch = true
   }
+#  tags = {
+#    "Name" = "server for web"
+#    "Env" = "dev"
+#    "kubernetes.io/cluster/my_eks" = "owned"
+#  }
+}
+
+
+
+#resource "aws_launch_configuration" "eks-private-lc" {
+#  iam_instance_profile        = "${aws_iam_instance_profile.eks-node.name}"
+#  image_id                    = "${var.eks-worker-ami}" ## visit https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
+#  instance_type               = "${var.worker-node-instance_type}" # use instance variable
+#  key_name                    = "${var.ssh_key_pair}"
+#  name_prefix                 = "eks-private"
+#  security_groups             = ["${aws_security_group.eks-node.id}"]
+##  user_data_base64            = "${base64encode(local.eks-node-private-userdata)}"
+  
+#  root_block_device {
+#    delete_on_termination = true
+#    volume_size = 30
+#    volume_type = "gp2"
+#  }
+#
+#  lifecycle {
+#    create_before_destroy = true
+#  }
+#}
+#
+#resource "aws_autoscaling_group" "eks-private-asg" {
+#  desired_capacity     = 1
+#  launch_configuration = "${aws_launch_configuration.eks-private-lc.id}"
+#  max_size             = 2
+#  min_size             = 1
+#  name                 = "eks-private"
+##  vpc_zone_identifier  = data.aws_subnets.subs_priv.ids
+#
+##  tag {
+#    key                 = "Name"
+#    value               = "eks-worker-private-node"
+#    propagate_at_launch = true
+#  }
+
+#  tag {
+#    key                 = "kubernetes.io/cluster/${var.cluster-name}"
+#    value               = "owned"
+#    propagate_at_launch = true
+#  }
 
 ## Enable this when you use cluster autoscaler within cluster.
 ## https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md
@@ -124,65 +155,65 @@ resource "aws_autoscaling_group" "eks-private-asg" {
 #    propagate_at_launch = true
 #  }
 
-}
+#}
 
 
 # Adding EKS workers scaling policy for scale up/down 
 # Creating Cloudwatch alarms for both scale up/down 
 
-resource "aws_autoscaling_policy" "eks-cpu-policy-private" {
-  name = "eks-cpu-policy-private"
-  autoscaling_group_name = "${aws_autoscaling_group.eks-private-asg.name}"
-  adjustment_type = "ChangeInCapacity"
-  scaling_adjustment = "1"
-  cooldown = "300"
-  policy_type = "SimpleScaling"
-}
+#resource "aws_autoscaling_policy" "eks-cpu-policy-private" {
+#  name = "eks-cpu-policy-private"
+#  autoscaling_group_name = "${aws_autoscaling_group.eks-private-asg.name}"
+#  adjustment_type = "ChangeInCapacity"
+#  scaling_adjustment = "1"
+#  cooldown = "300"
+#  policy_type = "SimpleScaling"
+#}
+#
+## scaling up cloudwatch metric
+#resource "aws_cloudwatch_metric_alarm" "eks-cpu-alarm-private" {
+#  alarm_name = "eks-cpu-alarm-private"
+#  alarm_description = "eks-cpu-alarm-private"
+#  comparison_operator = "GreaterThanOrEqualToThreshold"
+#  evaluation_periods = "2"
+#  metric_name = "CPUUtilization"
+#  namespace = "AWS/EC2"
+#  period = "120"
+#  statistic = "Average"
+#  threshold = "80"
 
-# scaling up cloudwatch metric
-resource "aws_cloudwatch_metric_alarm" "eks-cpu-alarm-private" {
-  alarm_name = "eks-cpu-alarm-private"
-  alarm_description = "eks-cpu-alarm-private"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods = "2"
-  metric_name = "CPUUtilization"
-  namespace = "AWS/EC2"
-  period = "120"
-  statistic = "Average"
-  threshold = "80"
-
-dimensions = {
-  "AutoScalingGroupName" = "${aws_autoscaling_group.eks-private-asg.name}"
-}
-  actions_enabled = true
-  alarm_actions = ["${aws_autoscaling_policy.eks-cpu-policy-private.arn}"]
-}
+#dimensions = {
+#  "AutoScalingGroupName" = "${aws_autoscaling_group.eks-private-asg.name}"
+#}
+#  actions_enabled = true
+#  alarm_actions = ["${aws_autoscaling_policy.eks-cpu-policy-private.arn}"]
+#}
 
 # scale down policy
-resource "aws_autoscaling_policy" "eks-cpu-policy-scaledown-private" {
-  name = "eks-cpu-policy-scaledown-private"
-  autoscaling_group_name = "${aws_autoscaling_group.eks-private-asg.name}"
-  adjustment_type = "ChangeInCapacity"
-  scaling_adjustment = "-1"
-  cooldown = "300"
-  policy_type = "SimpleScaling"
-}
+#resource "aws_autoscaling_policy" "eks-cpu-policy-scaledown-private" {
+#  name = "eks-cpu-policy-scaledown-private"
+#  autoscaling_group_name = "${aws_autoscaling_group.eks-private-asg.name}"
+#  adjustment_type = "ChangeInCapacity"
+#  scaling_adjustment = "-1"
+##  cooldown = "300"
+#  policy_type = "SimpleScaling"
+#}
 
 # scale down cloudwatch metric
-resource "aws_cloudwatch_metric_alarm" "eks-cpu-alarm-scaledown-private" {
-  alarm_name = "eks-cpu-alarm-scaledown-private"
-  alarm_description = "eks-cpu-alarm-scaledown-private"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods = "2"
-  metric_name = "CPUUtilization"
-  namespace = "AWS/EC2"
-  period = "120"
-  statistic = "Average"
-  threshold = "5"
+#resource "aws_cloudwatch_metric_alarm" "eks-cpu-alarm-scaledown-private" {
+#  alarm_name = "eks-cpu-alarm-scaledown-private"
+#  alarm_description = "eks-cpu-alarm-scaledown-private"
+#  comparison_operator = "LessThanOrEqualToThreshold"
+#  evaluation_periods = "2"
+#  metric_name = "CPUUtilization"
+#  namespace = "AWS/EC2"
+#  period = "120"
+#  statistic = "Average"
+#  threshold = "5"
 
-dimensions = {
-  "AutoScalingGroupName" = "${aws_autoscaling_group.eks-private-asg.name}"
-}
-  actions_enabled = true
-  alarm_actions = ["${aws_autoscaling_policy.eks-cpu-policy-scaledown-private.arn}"]
-}
+#dimensions = {
+#  "AutoScalingGroupName" = "${aws_autoscaling_group.eks-private-asg.name}"
+#}
+#  actions_enabled = true
+#  alarm_actions = ["${aws_autoscaling_policy.eks-cpu-policy-scaledown-private.arn}"]
+#}

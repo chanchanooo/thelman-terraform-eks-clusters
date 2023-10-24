@@ -47,11 +47,11 @@ resource "aws_security_group" "eks-cluster" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = "${
-    map(
-     "Name", "EKS - kubernetes master sg"
-    )
-  }"
+  tags = {
+    
+     "Name" = "EKS - kubernetes master sg"
+    
+  }
 }
 
 ##
@@ -85,19 +85,25 @@ resource "aws_security_group_rule" "eks-cluster-ingress-workstation-https" {
 ##
 
 resource "aws_eks_cluster" "eks-cluster" {
-
   name     = "${var.cluster-name}"
   role_arn = "${aws_iam_role.eks-cluster.arn}"
   version  = "${var.eks_version}"
   # enabled_cluster_log_types = ["api", "audit", "scheduler", "controllerManager"]
-
   vpc_config {
-    security_group_ids = ["${aws_security_group.eks-cluster.id}"]
-    subnet_ids         = ["${aws_subnet.eks-public.*.id}", "${aws_subnet.eks-private.*.id}"]
+    security_group_ids = [aws_security_group.eks-cluster.id]
+#    subnet_ids         = data.aws_subnets.eks_subnet.ids
+#    subnet_ids         = [aws_subnet.eks-private[count_private.index].id, aws_subnet.eks-public[count_public.index].id]
+     subnet_ids         = [
+                           aws_subnet.eks-public[0].id, 
+                           aws_subnet.eks-public[1].id, 
+                           aws_subnet.eks-public[2].id, 
+                           aws_subnet.eks-private[0].id,
+                           aws_subnet.eks-private[1].id,
+                           aws_subnet.eks-private[2].id]
   }
 
   depends_on = [
-    "aws_iam_role_policy_attachment.eks-cluster-AmazonEKSClusterPolicy",
-    "aws_iam_role_policy_attachment.eks-cluster-AmazonEKSServicePolicy",
+    aws_iam_role_policy_attachment.eks-cluster-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.eks-cluster-AmazonEKSServicePolicy,
   ]
 }
