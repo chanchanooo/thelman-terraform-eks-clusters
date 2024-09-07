@@ -1,0 +1,41 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15" version="24.7.12">
+  <diagram name="Page-1" id="Bm-xWHbnr6kbvL8WmOwy">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="AWS VPC" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="67" width="79" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="EC2" style="rounded=1;absoluteArcSize=1;arcSize=14;whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="26" y="102" width="42" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="EKS Cluster" style="rounded=1;absoluteArcSize=1;arcSize=14;whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="117" y="102" width="96" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Worker Nodes" style="rhombus;strokeWidth=2;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="92" y="204" width="148" height="148" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Created with" style="curved=1;startArrow=none;endArrow=block;exitX=0.25;exitY=0.99;entryX=0.49;entryY=0.01;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="47" y="68" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7" value="Created with" style="curved=1;startArrow=none;endArrow=block;exitX=0.74;exitY=0.99;entryX=0.5;entryY=0.01;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="165" y="68" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8" value="3 Worker Nodes via Terraform" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
